@@ -8,6 +8,9 @@ Fork from `kiwigrid/k8s-sidecar` https://github.com/kiwigrid/k8s-sidecar
 
 This is a docker container intended to run inside a kubernetes cluster to collect config maps with a specified label and store the included files in an local folder. It can also send a html request to a specified URL after a configmap change. The main target is to be run as a sidecar container to supply an application with information from the cluster. The contained python script is working with the Kubernetes API 1.10
 
+# Schema
+![Schema](https://raw.githubusercontent.com/sysincz/k8s-sidecar-cm-to-file/master/img/k8s-sidecar-cm-to-file-schema.png)
+
 # Why?
 
 Currently (April 2018) there is no simple way to hand files in configmaps to a service and keep them updated during runtime.
@@ -22,10 +25,19 @@ By adding additional env variables the container can send a html request to spec
 - Extract files from config maps
 - Filter based on label
 - Update/Delete on change of configmap
+- Marge configmaps data to one file
 
 # Usage
 
 Example for a simple deployment can be found in `example.yaml`. Depending on the cluster setup you have to grant yourself admin rights first: `kubectl create clusterrolebinding cluster-admin-binding   --clusterrole cluster-admin   --user $(gcloud config get-value account)`
+
+# Tags
+- Prometheus
+- Alertmanager config 
+- ConfigMaps
+- Grafana Dashboards big file
+- Multi Teams 
+- Cross Namespace
 
 ## Configuration Environment Variables
 
