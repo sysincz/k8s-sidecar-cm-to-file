@@ -256,8 +256,6 @@ def main():
             print("ProtocolError when calling kubernetes: %s\n" % e)
         except:
             raise
-        exit()
-
-
+        
 if __name__ == '__main__':
     main()
