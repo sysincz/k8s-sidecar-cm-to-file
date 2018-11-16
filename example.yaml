@@ -16,23 +16,61 @@ spec:
     spec:
       serviceAccountName: sample-acc
       containers:
-      - name: bash
+      - name: bashls
         image: bash:4.4.19
         volumeMounts:
         - name: shared-volume
-          mountPath: /tmp/
+          mountPath: /tmp/sidecar_mount/
         command: ["watch"]
-        args: ["cat", "/tmp/*"]
+        args: ["ls /tmp/sidecar_mount/* ; sleep 5"]
+        resources:
+          limits:
+            cpu: 20m
+            memory: 20Mi
+      - name: bashcat
+        image: bash:4.4.19
+        volumeMounts:
+        - name: shared-volume
+          mountPath: /tmp/sidecar_mount/
+        command: ["watch"]
+        args: ["cat /tmp/sidecar_mount/alertmanager.yaml ; sleep 5"]
+        resources:
+          limits:
+            cpu: 20m
+            memory: 20Mi
       - name: sidecar
         image: sysincz/k8s-sidecar-cm-to-file:latest
         volumeMounts:
         - name: shared-volume
-          mountPath: /tmp/
+          mountPath: /tmp/sidecar_mount/
         env:
         - name: LABEL
           value: "findme"
         - name: FOLDER
-          value: /tmp/
+          value: /tmp/sidecar_mount/
+      
+        - name: PARTFILES
+          value: "True"
+        - name: COMMENT
+          value: "True"
+      #ROUTE maping    
+        - name: DATA_NAME_ROUTE
+          value: "alertmanager-route"
+        - name: DATA_INDENT_ROUTE
+          value: "2"
+        - name: DATA_FILE_ROUTE
+          value: "alertmanager.yaml.part1.01routes"
+      #RECEIVERS maping
+        - name: DATA_NAME_RECEIVERS
+          value: "alertmanager-receivers"
+        - name: DATA_INDENT_RECEIVERS
+          value: "0"
+        - name: DATA_FILE_RECEIVERS
+          value: "alertmanager.yaml.part6.08receivers"
+        resources:
+          limits:
+            cpu: 50m
+            memory: 50Mi
       volumes:
       - name: shared-volume
         emptyDir: {}
