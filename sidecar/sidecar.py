@@ -96,7 +96,10 @@ def watchForChanges(label, targetFolder, url, method, payload, current):
                 print("File in configmap %s %s" % (filename, eventType))
                 if (eventType == "ADDED") or (eventType == "MODIFIED"):
                     if partfiles:
-                      writeTextToFile(sourceFolder, filename+cmid, dataMap[filename])
+                        if prog.match(filename):  #if parts\d+ is in file 
+                            writeTextToFile(sourceFolder,filename+cmid , dataMap[filename])
+                        else:
+                            writeTextToFile(targetFolder,filename, dataMap[filename])
                     else:
                       writeTextToFile(targetFolder, filename, dataMap[filename])
 
