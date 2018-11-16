@@ -60,13 +60,13 @@ data:
    #from alertmanager-route with indent from DATA_INDENT_ROUTE # SIDECAR COMMENT
    - match:
       alertname: "DeadMansSwitchA"
-      receiver: null       
+     receiver: null       
     
   alertmanager.yaml.part1.01routes.test2: |
     # <--  (hash) have to be set for set space # SIDECAR COMMENT
     ##
       - match:
-        alertname: "DeadMansSwitchB"
+         alertname: "DeadMansSwitchB"
         receiver: null       
              
   alertmanager.yaml.part2.00inhibit_rules-global: |
