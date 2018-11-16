@@ -7,6 +7,7 @@ import requests
 import re
 import shutil
 import tempfile
+import subprocess
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
@@ -109,7 +110,7 @@ def watchForChanges(label, targetFolder, url, method, payload, current):
 
             if partfiles:
                 processFiles(sourceFolder,targetFolder,comment)
-            if url is not None:
+            if url is not None and checkConfig():
                        request(url, method, payload)
 
 # $Env:DATA_NAME_ROUTE="alertmanager-route"
@@ -198,6 +199,32 @@ def appendParts(listfiles,frompath,topath,comment):
 def indent(text, count_ident=0):
     indent=' ' * count_ident
     return ''.join([indent + l for l in text.splitlines(True)])
+
+def checkConfig():
+    command = os.getenv('CHECK_CONFIG_COMMAND')
+    if command is None:
+      return True
+    else:
+      command = True 
+    
+    ok_exit_codes = os.getenv('OK_EXIT_CODES')
+    if ok_exit_codes is None:
+      ok_exit_codes='0,127'
+
+    return_code = subprocess.call(command, shell=True)
+    print(return_code)
+    config_ok=False
+    for code in ok_exit_codes.split(','):
+        if int(code) == int(return_code):
+          config_ok=True
+
+        if config_ok:
+            print(" Config is ok ")
+            return True
+        else:
+            print("Oups Something wrong ")
+            return False
+
 
 def copyToDest(src,dest):
     src_files = os.listdir(src)
