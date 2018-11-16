@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-rules-team-db
+  labels:
+    findme: "yea"
+data:
+ alertmanager-route: |
+    # This route handles all alerts coming from a database service. If there's
+    # no team to handle it, it defaults to the DB team.
+    - match:
+        service: database
+      receiver: team-DB-pager
+      # Also group alerts by affected database.
+      group_by: [alertname, cluster, database]
+      routes:
+      - match:
+          owner: team-X
+        receiver: team-X-pager
+        continue: true
+      - match:
+          owner: team-Y
+        receiver: team-Y-pager
+
+ alertmanager-receivers: |
+   - name: 'team-DB-pager'
+     pagerduty_configs:
+     - service_key: <team-DB-key>

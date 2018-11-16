@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-rules-team-y
+  labels:
+    findme: "yeas"
+data:
+ alertmanager-route: |
+   - match:
+      service: files
+     receiver: team-Y-mails
+
+     routes:
+     - match:
+         severity: critical
+       receiver: team-Y-pager
+
+ alertmanager-receivers: |
+   - name: 'team-Y-mails'
+     email_configs:
+     - to: 'team-Y+alerts@example.org'
+
+   - name: 'team-Y-pager'
+     pagerduty_configs:
+     - service_key: <team-Y-key>
