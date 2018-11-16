@@ -24,7 +24,7 @@ spec:
         command: ["watch"]
         args: ["cat", "/tmp/*"]
       - name: sidecar
-        image: tomasmilec/sidecar:latest
+        image: sysincz/k8s-sidecar-cm-to-file:latest
         volumeMounts:
         - name: shared-volume
           mountPath: /tmp/
