@@ -39,7 +39,7 @@ spec:
             cpu: 20m
             memory: 20Mi
       - name: sidecar
-        image: sysincz/k8s-sidecar-cm-to-file:latest
+        image: sysincz/k8s-sidecar-cm-to-file:test
         volumeMounts:
         - name: shared-volume
           mountPath: /tmp/sidecar_mount/
@@ -67,6 +67,11 @@ spec:
           value: "0"
         - name: DATA_FILE_RECEIVERS
           value: "alertmanager.yaml.part6.08receivers"
+      #check config amtool
+        - name: CHECK_CONFIG_COMMAND
+          value: "./amtool check-config /tmp/k8s_sidecar-cm-to-file/alertmanager.yaml"
+        - name: OK_EXIT_CODES
+          value: "0,127"
         resources:
           limits:
             cpu: 50m
