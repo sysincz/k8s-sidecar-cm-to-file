@@ -110,7 +110,8 @@ def watchForChanges(label, targetFolder, url, method, payload, current):
 
             if partfiles:
                 processFiles(sourceFolder,targetFolder,comment)
-            if url is not None and checkConfig():
+            check_config=checkConfig()
+            if url is not None and check_config:
                        request(url, method, payload)
 
 # $Env:DATA_NAME_ROUTE="alertmanager-route"
