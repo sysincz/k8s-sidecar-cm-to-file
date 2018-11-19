@@ -12,6 +12,8 @@ from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
 prog = re.compile('^(?P<file_name>.+)\.part\d+\.?.*$')
+prog2 = re.compile('^(?P<file_name>.+)-cmid-.*$')
+
 sourceFolder = tempfile.mkdtemp()
 transform={}
 
@@ -97,21 +99,21 @@ def watchForChanges(label, targetFolder, url, method, payload, current):
                 print("File in configmap %s %s" % (filename, eventType))
                 if (eventType == "ADDED") or (eventType == "MODIFIED"):
                     if partfiles:
-                        if prog.match(filename):  #if parts\d+ is in file 
-                            writeTextToFile(sourceFolder,filename+cmid , dataMap[filename])
-                        else:
-                            writeTextToFile(targetFolder,filename, dataMap[filename])
+                        #if prog.match(filename):  #if parts\d+ is in file 
+                            writeTextToFile(sourceFolder,filename+"-cmid-"+cmid , dataMap[filename])
+                        #else:
+                        #    writeTextToFile(targetFolder,filename, dataMap[filename])
                     else:
                       writeTextToFile(targetFolder, filename, dataMap[filename])
 
                     
                 else:
                     rmFile(sourceFolder,targetFolder,filename)
-
+            reloadConfig=True
             if partfiles:
-                processFiles(sourceFolder,targetFolder,comment)
-            check_config=checkConfig()
-            if url is not None and check_config:
+                reloadConfig=processFiles(sourceFolder,targetFolder,comment)
+            
+            if url is not None and reloadConfig:
                        request(url, method, payload)
 
 # $Env:DATA_NAME_ROUTE="alertmanager-route"
@@ -182,9 +184,13 @@ def appendParts(listfiles,frompath,topath,comment):
   for f in listfiles:
     file_name=f
 
-    result = prog.match(file_name)
+    result = prog.match(file_name) # parts
     if result:
       file_name=result.group('file_name')
+    elif prog2.match(file_name): #hole files
+      result2=prog2.match(file_name)
+      file_name=result2.group('file_name')
+
     fromfullpath=os.path.join(frompath, f)
     fromfile = open(fromfullpath, 'r') 
     tofullpath=os.path.join(topath, file_name)
@@ -202,11 +208,12 @@ def indent(text, count_ident=0):
     return ''.join([indent + l for l in text.splitlines(True)])
 
 def checkConfig():
-    print("Start check config")
+    
     command = os.getenv('CHECK_CONFIG_COMMAND')
     if command is None:
       return True
 
+    print("Start check config")
     print("Command:" + command)
     
     ok_exit_codes = os.getenv('OK_EXIT_CODES')
@@ -237,17 +244,30 @@ def copyToDest(src,dest):
         print("Created "+file_name + " in " + dest)
 
 def processFiles(sourcepath,destpath,comment):
-  tmppath=tempfile.mkdtemp()
-  listall = [f for f in os.listdir(sourcepath)]
-  listall.sort()
+  tmp=tempfile.gettempdir()
+  #tmppath=tempfile.mkdtemp()
+  tmppath=os.path.join(tmp,"k8s_sidecar-cm-to-file")
+  if not os.path.exists(tmppath):
+        os.makedirs(tmppath)
+  print("Temp directory for copy after check config is: "+ tmppath)
+  listall = getFiles(sourcepath)
+  #rename alias to file name
   transform=getTransform()
   if transform :
       transformFiles(transform,listall,sourcepath)
-      listall = [f for f in os.listdir(sourcepath)]
-      listall.sort()
+      listall = getFiles(sourcepath)
+  #procces 
   appendParts(listall,sourcepath,tmppath,comment)
-  copyToDest(tmppath,destpath)
+  check_config=checkConfig()
+  if check_config:
+     copyToDest(tmppath,destpath)
   shutil.rmtree(tmppath)
+  return check_config
+
+def getFiles(path):
+    listall = [f for f in os.listdir(path)]
+    listall.sort()
+    return listall
 
 def main():
     print("Starting config map collector")
