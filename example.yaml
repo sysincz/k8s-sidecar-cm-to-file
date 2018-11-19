@@ -69,7 +69,7 @@ spec:
           value: "alertmanager.yaml.part6.08receivers"
       #check config amtool
         - name: CHECK_CONFIG_COMMAND
-          value: "./amtool check-config /tmp/sidecar_mount/alertmanager.yaml"
+          value: "./amtool check-config /tmp/k8s_sidecar-cm-to-file/alertmanager.yaml"
         - name: OK_EXIT_CODES
           value: "0,127"
         resources:
