@@ -214,7 +214,7 @@ def checkConfig():
       ok_exit_codes='0,127'
 
     return_code = subprocess.call(command, shell=True)
-    print("Return code:"+return_code)
+    print("Return code:"+str(return_code))
     config_ok=False
     for code in ok_exit_codes.split(','):
         if int(code) == int(return_code):
