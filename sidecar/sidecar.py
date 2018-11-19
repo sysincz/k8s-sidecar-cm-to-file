@@ -247,8 +247,9 @@ def processFiles(sourcepath,destpath,comment):
   tmp=tempfile.gettempdir()
   #tmppath=tempfile.mkdtemp()
   tmppath=os.path.join(tmp,"k8s_sidecar-cm-to-file")
-  if not os.path.exists(tmppath):
-        os.makedirs(tmppath)
+  if os.path.exists(tmppath):
+      shutil.rmtree(tmppath)
+  os.makedirs(tmppath)
   print("Temp directory for copy after check config is: "+ tmppath)
   listall = getFiles(sourcepath)
   #rename alias to file name
@@ -261,7 +262,6 @@ def processFiles(sourcepath,destpath,comment):
   check_config=checkConfig()
   if check_config:
      copyToDest(tmppath,destpath)
-  shutil.rmtree(tmppath)
   return check_config
 
 def getFiles(path):
