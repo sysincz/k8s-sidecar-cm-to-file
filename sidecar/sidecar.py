@@ -201,18 +201,19 @@ def indent(text, count_ident=0):
     return ''.join([indent + l for l in text.splitlines(True)])
 
 def checkConfig():
+    print("Start check config")
     command = os.getenv('CHECK_CONFIG_COMMAND')
     if command is None:
       return True
-    else:
-      command = True 
+
+    print("Command:" + command)
     
     ok_exit_codes = os.getenv('OK_EXIT_CODES')
     if ok_exit_codes is None:
       ok_exit_codes='0,127'
 
     return_code = subprocess.call(command, shell=True)
-    print(return_code)
+    print("Return code:"+return_code)
     config_ok=False
     for code in ok_exit_codes.split(','):
         if int(code) == int(return_code):
