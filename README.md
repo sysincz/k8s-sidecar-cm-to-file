@@ -34,6 +34,7 @@ Example for a simple deployment can be found in `example.yaml`. Depending on the
 # Tags
 - Prometheus
 - Alertmanager config 
+- amtool check-config alertmanager.yaml
 - ConfigMaps
 - Grafana Dashboards big file
 - Multi Teams 
@@ -71,6 +72,7 @@ Example for a simple deployment can be found in `example.yaml`. Depending on the
   - required: false
   - type: json
 
+## Configuration Environment Variables For Part
 - `PARTFILES`
   - description: Take the files with the '.parts\d+' in name of file and save it in one file
   - default: False
@@ -83,8 +85,21 @@ Example for a simple deployment can be found in `example.yaml`. Depending on the
   - required: false
   - type: boolean
 
+ ### Configuration Environment Variables For Part check config amtool (`PARTFILES`=True)
+- `CHECK_CONFIG_COMMAND`
+  - description: Command for check config
+  - required: false
+  - type: string
+  - example value: "./amtool check-config /tmp/k8s_sidecar-cm-to-file/alertmanager.yaml"
 
-### Configuration Environment Variables For Part Files Mapping
+- `OK_EXIT_CODES`
+  - description: Acceptable exit codes from command `CHECK_CONFIG_COMMAND`
+  - default: 0,127
+  - required: false
+  - type: string
+  - example value:  "0,127"
+
+### Configuration Environment Variables For Part Files Mapping (`PARTFILES`=True)
 - `DATA_NAME_{somename}`  example: `DATA_NAME_ROUTE`
   - description: Name of file in ConfigMap 
   - required: false
