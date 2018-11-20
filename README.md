@@ -11,9 +11,13 @@ This is a docker container intended to run inside a kubernetes cluster to collec
 # Schema
 ![Schema](https://raw.githubusercontent.com/sysincz/k8s-sidecar-cm-to-file/master/img/k8s-sidecar-cm-to-file-schema.png)
 
+
+# Labels
+![Labels](https://raw.githubusercontent.com/sysincz/k8s-sidecar-cm-to-file/master/img/k8s-sidecar-cm-to-file-labels.png)
+
 # Why?
 
-Currently (April 2018) there is no simple way to hand files in configmaps to a service and keep them updated during runtime.
+Currently there is no simple way to hand files in configmaps to a service and keep them updated during runtime.
 
 # How?
 
