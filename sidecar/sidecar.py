@@ -152,12 +152,14 @@ def purge(dir,pattern):
             os.remove(filePath)
 
 def rmFile(sourceFolder,targetFolder,file):
-  if os.path.exists(targetFolder +"/"+file):
-          os.remove(targetFolder+"/"+file)
-          print("Delete file: " + targetFolder +"/"+file)
-  if os.path.exists(sourceFolder +"/"+file):
-          os.remove(sourceFolder +"/"+file)
-          print("Delete file: "+ sourceFolder +"/"+file)
+  target=os.path.join(targetFolder ,file)
+  source=os.path.join(sourceFolder ,file)
+  if os.path.exists(target):
+     os.remove(target)
+     print("Delete file: " + target)
+  if os.path.exists(source):
+     os.remove(source)
+     print("Delete file: "+ source)
 
 def transformFiles(transform,listfiles,path):
   for f in listfiles: 
@@ -206,6 +208,15 @@ def appendParts(listfiles,frompath,topath,comment):
 def indent(text, count_ident=0):
     indent=' ' * count_ident
     return ''.join([indent + l for l in text.splitlines(True)])
+
+def commandAfterCC():
+    command=os.getenv("COMMAND_AFTER_CC") 
+    if command is None:
+          return True
+    print("Start command after Check Config")
+    print("Command:" + command)
+    return_code = subprocess.call(command, shell=True)
+    print("Return code:"+str(return_code))
 
 def checkConfig():
     
@@ -261,6 +272,7 @@ def processFiles(sourcepath,destpath,comment):
   appendParts(listall,sourcepath,tmppath,comment)
   check_config=checkConfig()
   if check_config:
+     commandAfterCC()
      copyToDest(tmppath,destpath)
   return check_config
 

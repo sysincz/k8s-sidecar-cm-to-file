@@ -72,6 +72,8 @@ spec:
           value: "./amtool check-config /tmp/k8s_sidecar-cm-to-file/alertmanager.yaml"
         - name: OK_EXIT_CODES
           value: "0,127"
+        - name: COMMAND_AFTER_CC
+          value: "./files_to_cm.py --name=alertmanager-main --dir /tmp/k8s_sidecar-cm-to-file/alertmanager.yaml --namespace default"
         resources:
           limits:
             cpu: 50m
