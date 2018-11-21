@@ -72,12 +72,13 @@ spec:
           value: "./amtool check-config /tmp/k8s_sidecar-cm-to-file/alertmanager.yaml"
         - name: OK_EXIT_CODES
           value: "0,127"
+      #command after check config (create Secret for alert-manager)
         - name: COMMAND_AFTER_CC
-          value: "./files_to_cm.py --name=alertmanager-main --dir /tmp/k8s_sidecar-cm-to-file/alertmanager.yaml --namespace default"
+          value: "python ./files_to_cm.py --name=alertmanager-main --dir /tmp/k8s_sidecar-cm-to-file/ --file_pattern '.*.yaml'"
         resources:
           limits:
             cpu: 50m
-            memory: 50Mi
+            memory: 100Mi
       volumes:
       - name: shared-volume
         emptyDir: {}
@@ -100,6 +101,9 @@ rules:
 - apiGroups: [""]
   resources: ["configmaps"]
   verbs: ["get", "watch", "list"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "watch", "list","create","update"]
 ---
 apiVersion: v1
 kind: ServiceAccount
