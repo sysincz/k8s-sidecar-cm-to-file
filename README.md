@@ -43,6 +43,8 @@ Example for a simple deployment can be found in `example.yaml`. Depending on the
 - Grafana Dashboards big file
 - Multi Teams 
 - Cross Namespace
+- Files to secret
+- alertmanager.yaml to secrets
 
 ## Configuration Environment Variables
 
