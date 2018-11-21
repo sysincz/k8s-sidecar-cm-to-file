@@ -39,7 +39,7 @@ spec:
             cpu: 20m
             memory: 20Mi
       - name: sidecar
-        image: sysincz/k8s-sidecar-cm-to-file:test
+        image: sysincz/k8s-sidecar-cm-to-file:latest
         volumeMounts:
         - name: shared-volume
           mountPath: /tmp/sidecar_mount/
