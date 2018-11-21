@@ -74,6 +74,7 @@ def watchForChanges(label, targetFolder, url, method, payload, current):
     else:
         stream = w.stream(v1.list_namespaced_config_map, namespace=namespace)
     for event in stream:
+        print(event['object'])
         metadata = event['object'].metadata
         if metadata.labels is None:
             continue
