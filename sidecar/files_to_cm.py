@@ -6,9 +6,9 @@ import argparse
 parser = argparse.ArgumentParser(sys.argv[0])
 #parser.add_argument("--configmap", help="Create configmap  (default: 'Secret')", action='store_true',default=False)
 parser.add_argument("--name", help="Name of Secret/Configmap", type=str,required=True)
-parser.add_argument("--namespace", help="Name of Namespace", type=str)
 parser.add_argument("--dir", help="Source directory path", type=str,required=True)
-parser.add_argument("--file_pattern", help="File pattern for match files (default: '.*'", type=str,default=".*")
+parser.add_argument("--file_pattern", help="File pattern for match files (default: '.*')", type=str,default=".*")
+parser.add_argument("--namespace", help="Name of Namespace", type=str)
 args = parser.parse_args()
 
 #print(args.configmap)

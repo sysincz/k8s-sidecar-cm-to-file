@@ -89,6 +89,12 @@ Example for a simple deployment can be found in `example.yaml`. Depending on the
   - required: false
   - type: boolean
 
+- `COMMAND_AFTER_CC`
+  - description: Command after success check config   
+  - required: false
+  - type: string
+  - example: "python ./files_to_cm.py --name=alertmanager-main --dir /tmp/k8s_sidecar-cm-to-file/ --file_pattern '.*.yaml'"
+
  ### Configuration Environment Variables For Part check config amtool (`PARTFILES`=True)
 - `CHECK_CONFIG_COMMAND`
   - description: Command for check config
@@ -124,4 +130,31 @@ Example for a simple deployment can be found in `example.yaml`. Depending on the
   - example value: "2"
 
 
+# file to secrets
+```bash
+# python ./files_to_cm.py -h
+usage: ./files_to_cm.py [-h] --name NAME --dir DIR
+                        [--file_pattern FILE_PATTERN] [--namespace NAMESPACE]
 
+optional arguments:
+  -h, --help            show this help message and exit
+  --name NAME           Name of Secret/Configmap
+  --dir DIR             Source directory path
+  --file_pattern FILE_PATTERN
+                        File pattern for match files (default: '.*')
+  --namespace NAMESPACE
+                        Name of Namespace
+
+```
+example:
+Script take all `yaml` files from directory `/tmp/k8s_sidecar-cm-to-file/` and create secret with name `alertmanager-main` in namespace `default`
+`
+python ./files_to_cm.py --name=alertmanager-main --dir /tmp/k8s_sidecar-cm-to-file/ --file_pattern '.*.yaml' --namespace 'default'
+`
+
+For this step you need have set up ClusterRole
+```
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "watch", "list","create","update"]
+```
