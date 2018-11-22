@@ -100,7 +100,7 @@ def watchForChanges(label, targetFolder, url, method, payload, current):
                 print(f'Working on configmap {metadata.namespace}/{metadata.name}')
                 if label in event['object'].metadata.labels.keys():
                     print("Configmap with label found")
-                    #delete all old files frim config map
+                    # delete all old files frim config map
                     # fixed issue if one file from cm is removed
                     cmid="_"+metadata.name+"_"+metadata.namespace
                     purge(sourceFolder,'.*'+cmid)
