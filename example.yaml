@@ -40,6 +40,7 @@ spec:
             memory: 20Mi
       - name: sidecar
         image: sysincz/k8s-sidecar-cm-to-file:test_stream
+        imagePullPolicy: Always
         volumeMounts:
         - name: shared-volume
           mountPath: /tmp/sidecar_mount/
@@ -75,6 +76,9 @@ spec:
       #command after check config (create Secret for alert-manager)
         - name: COMMAND_AFTER_CC
           value: "python ./files_to_cm.py --name=alertmanager-main --dir /tmp/k8s_sidecar-cm-to-file/ --file_pattern '.*.yaml'"
+      #refresh connection
+        - name: TIMEOUT
+          value: "360" #60secx6 
         resources:
           limits:
             cpu: 50m

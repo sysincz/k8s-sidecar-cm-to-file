@@ -75,25 +75,27 @@ def watchForChanges(label, targetFolder, url, method, payload, current):
     while True:
         try:
             if namespace is None:
-                stream = w.stream(v1.list_namespaced_config_map, namespace=current,_request_timeout=timeout)
+                stream = w.stream(v1.list_namespaced_config_map, namespace=current,_request_timeout=timeout,label_selector="%s" % label )
             elif namespace == "ALL":
-                stream = w.stream(v1.list_config_map_for_all_namespaces,_request_timeout=timeout)
+                stream = w.stream(v1.list_config_map_for_all_namespaces,_request_timeout=timeout,label_selector="%s" % label)
             else:
-                stream = w.stream(v1.list_namespaced_config_map, namespace=namespace,_request_timeout=timeout)
-  
+                stream = w.stream(v1.list_namespaced_config_map, namespace=namespace,_request_timeout=timeout,label_selector="%s" % label)
+            now=datetime.datetime.now()
+            print(f'{now} Connect to kubernetes api ...')
             for event in stream:
                 
                 metadata = event['object'].metadata
-                now=datetime.datetime.now()
+                
                 
                 if metadata.labels is None:
                     continue
-                id=metadata.namespace+"_"+metadata.name
+                cmid="_"+metadata.name+"_"+metadata.namespace
                 resource_version= event['raw_object']['metadata']['resourceVersion']
-                print(f'{now} Read configmap {metadata.namespace}/{metadata.name}')
+                #now=datetime.datetime.now()
+                #print(f'{now} Read configmap {metadata.namespace}/{metadata.name}')
 
-                if id not in registerWa or registerWa[id] < resource_version:
-                   registerWa[id]=resource_version
+                if cmid not in registerWa or registerWa[cmid] < resource_version:
+                   registerWa[cmid]=resource_version
                 else:
                    continue
 
@@ -102,7 +104,7 @@ def watchForChanges(label, targetFolder, url, method, payload, current):
                     print("Configmap with label found")
                     # delete all old files frim config map
                     # fixed issue if one file from cm is removed
-                    cmid="_"+metadata.name+"_"+metadata.namespace
+                    
                     purge(sourceFolder,'.*'+cmid)
 
                     dataMap=event['object'].data
@@ -112,21 +114,16 @@ def watchForChanges(label, targetFolder, url, method, payload, current):
                         if partfiles:
                           processFiles(sourceFolder,targetFolder,comment)
                         continue
+                    
                     eventType = event['type']
-
-
                     for filename in dataMap.keys():
                         print("File in configmap %s %s" % (filename, eventType))
                         if (eventType == "ADDED") or (eventType == "MODIFIED"):
                             if partfiles:
-                                #if prog.match(filename):  #if parts\d+ is in file 
-                                    writeTextToFile(sourceFolder,filename+"-cmid-"+cmid , dataMap[filename])
-                                #else:
-                                #    writeTextToFile(targetFolder,filename, dataMap[filename])
+                                writeTextToFile(sourceFolder,filename+"-cmid-"+cmid , dataMap[filename])
                             else:
                               writeTextToFile(targetFolder, filename, dataMap[filename])
-
-                            
+ 
                         else:
                             rmFile(sourceFolder,targetFolder,filename)
                     reloadConfig=True
@@ -136,18 +133,9 @@ def watchForChanges(label, targetFolder, url, method, payload, current):
                     if url is not None and reloadConfig:
                             request(url, method, payload)
         except ReadTimeoutError as e:
-            print("Ignored Error ReadTimeoutError when calling kubernetes: %s\n" % e)
+            print("Ignored E rror ReadTimeoutE rror when calling kubernetes: %s\n" % e)
         except:
             raise
-
-
-# $Env:DATA_NAME_ROUTE="alertmanager-route"
-# $Env:DATA_INDENT_ROUTE="2"
-# $Env:DATA_FILE_ROUTE="alertmanager.yaml.part1.01routes"
-
-# $Env:DATA_NAME_RECEIVERS="alertmanager-receivers"
-# $Env:DATA_INDENT_RECEIVERS="0"
-# $Env:DATA_FILE_RECEIVERS="alertmanager.yaml.part6.08receivers"
 
 def getTransform():
   transform = {}
@@ -281,7 +269,6 @@ def copyToDest(src,dest):
 
 def processFiles(sourcepath,destpath,comment):
   tmp=tempfile.gettempdir()
-  #tmppath=tempfile.mkdtemp()
   tmppath=os.path.join(tmp,"k8s_sidecar-cm-to-file")
   if os.path.exists(tmppath):
       shutil.rmtree(tmppath)
@@ -308,8 +295,6 @@ def getFiles(path):
 
 def main():
     print("Starting config map collector")
-    
-
 
     label = os.getenv('LABEL')
     if label is None:
@@ -330,8 +315,7 @@ def main():
         namespace = f.read()
     else:  
       config.load_kube_config()
-      #namespace="default"
-      namespace="monitoring"
+      namespace="default"
 
     print("Namespace: "+namespace)
     print("Config for cluster api loaded...")
