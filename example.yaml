@@ -39,7 +39,7 @@ spec:
             cpu: 20m
             memory: 20Mi
       - name: sidecar
-        image: sysincz/k8s-sidecar-cm-to-file:test_stream
+        image: sysincz/k8s-sidecar-cm-to-file:latest
         imagePullPolicy: Always
         volumeMounts:
         - name: shared-volume
@@ -49,6 +49,8 @@ spec:
           value: "findme"
         - name: FOLDER
           value: /tmp/sidecar_mount/
+        - name: NAMESPACE
+          value: ALL
       
         - name: PARTFILES
           value: "True"
@@ -100,11 +102,18 @@ data:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: sample-role
+  name: sample-clusterrole
 rules:
 - apiGroups: [""]
   resources: ["configmaps"]
   verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: sample-role
+  namespace: default
+rules:
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["get", "watch", "list","create","update"]
@@ -117,9 +126,22 @@ metadata:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: sample-rolebind
+  name: sample-clusterrolebinding
 roleRef:
   kind: ClusterRole
+  name: sample-clusterrole
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: sample-acc
+  namespace: default
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: sample-rolebinding
+roleRef:
+  kind: Role
   name: sample-role
   apiGroup: rbac.authorization.k8s.io
 subjects:

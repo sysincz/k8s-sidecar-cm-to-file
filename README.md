@@ -78,6 +78,12 @@ Example for a simple deployment can be found in `example.yaml`. Depending on the
   - required: false
   - type: json
 
+- `TIMEOUT`
+  - description: Auto reconnect to kubernetes after ..sec [ bug fix when sidecar and kubernetes api stoped communicate ]
+  - required: false
+  - type: int
+  - default: "600"
+
 ## Configuration Environment Variables For Part
 - `PARTFILES`
   - description: Take the files with the '.parts\d+' in name of file and save it in one file
