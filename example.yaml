@@ -40,6 +40,7 @@ spec:
             memory: 20Mi
       - name: sidecar
         image: sysincz/k8s-sidecar-cm-to-file:latest
+        imagePullPolicy: Always
         volumeMounts:
         - name: shared-volume
           mountPath: /tmp/sidecar_mount/
@@ -48,6 +49,8 @@ spec:
           value: "findme"
         - name: FOLDER
           value: /tmp/sidecar_mount/
+        - name: NAMESPACE
+          value: ALL
       
         - name: PARTFILES
           value: "True"
@@ -75,6 +78,9 @@ spec:
       #command after check config (create Secret for alert-manager)
         - name: COMMAND_AFTER_CC
           value: "python ./files_to_cm.py --name=alertmanager-main --dir /tmp/k8s_sidecar-cm-to-file/ --file_pattern '.*.yaml'"
+      #refresh connection
+        - name: TIMEOUT
+          value: "360" #60secx6 
         resources:
           limits:
             cpu: 50m
@@ -96,11 +102,18 @@ data:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: sample-role
+  name: sample-clusterrole
 rules:
 - apiGroups: [""]
   resources: ["configmaps"]
   verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: sample-role
+  namespace: default
+rules:
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["get", "watch", "list","create","update"]
@@ -113,9 +126,22 @@ metadata:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: sample-rolebind
+  name: sample-clusterrolebinding
 roleRef:
   kind: ClusterRole
+  name: sample-clusterrole
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: sample-acc
+  namespace: default
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: sample-rolebinding
+roleRef:
+  kind: Role
   name: sample-role
   apiGroup: rbac.authorization.k8s.io
 subjects:

@@ -1,6 +1,6 @@
 from kubernetes import client, config, watch
 from kubernetes.client.rest import ApiException
-from urllib3.exceptions import ProtocolError
+from urllib3.exceptions import ProtocolError,ReadTimeoutError
 import os
 import sys
 import requests
@@ -8,6 +8,7 @@ import re
 import shutil
 import tempfile
 import subprocess
+import datetime
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
@@ -67,62 +68,74 @@ def watchForChanges(label, targetFolder, url, method, payload, current):
       comment = True 
 
     namespace = os.getenv("NAMESPACE")
-    if namespace is None:
-        stream = w.stream(v1.list_namespaced_config_map, namespace=current)
-    elif namespace == "ALL":
-        stream = w.stream(v1.list_config_map_for_all_namespaces)
-    else:
-        stream = w.stream(v1.list_namespaced_config_map, namespace=namespace)
-    for event in stream:
-        metadata = event['object'].metadata
-        if metadata.labels is None:
-            continue
-        print(f'Working on configmap {metadata.namespace}/{metadata.name}')
-        if label in event['object'].metadata.labels.keys():
-            print("Configmap with label found")
-            #delete all old files frim config map
-            # fixed issue if one file from cm is removed
-            cmid="_"+metadata.name+"_"+metadata.namespace
-            purge(sourceFolder,'.*'+cmid)
+    timeout=int(os.getenv("TIMEOUT",600 ) )
+    # ,resource_version=resrc_version dont work WA
+    registerWa={}
+    
+    while True:
+        try:
+            if namespace is None:
+                stream = w.stream(v1.list_namespaced_config_map, namespace=current,_request_timeout=timeout,label_selector="%s" % label )
+            elif namespace == "ALL":
+                stream = w.stream(v1.list_config_map_for_all_namespaces,_request_timeout=timeout,label_selector="%s" % label)
+            else:
+                stream = w.stream(v1.list_namespaced_config_map, namespace=namespace,_request_timeout=timeout,label_selector="%s" % label)
+            now=datetime.datetime.now()
+            print(f'{now} Connect to kubernetes api ...')
+            for event in stream:
+                
+                metadata = event['object'].metadata
+                
+                
+                if metadata.labels is None:
+                    continue
+                cmid="_"+metadata.name+"_"+metadata.namespace
+                resource_version= event['raw_object']['metadata']['resourceVersion']
+                #now=datetime.datetime.now()
+                #print(f'{now} Read configmap {metadata.namespace}/{metadata.name}')
 
-            dataMap=event['object'].data
-            if dataMap is None:
-                print("Configmap does not have data.")
-                # for sure if some one delete data
-                if partfiles:
-                  processFiles(sourceFolder,targetFolder,comment)
-                continue
-            eventType = event['type']
-
-
-            for filename in dataMap.keys():
-                print("File in configmap %s %s" % (filename, eventType))
-                if (eventType == "ADDED") or (eventType == "MODIFIED"):
-                    if partfiles:
-                        #if prog.match(filename):  #if parts\d+ is in file 
-                            writeTextToFile(sourceFolder,filename+"-cmid-"+cmid , dataMap[filename])
-                        #else:
-                        #    writeTextToFile(targetFolder,filename, dataMap[filename])
-                    else:
-                      writeTextToFile(targetFolder, filename, dataMap[filename])
-
-                    
+                if cmid not in registerWa or registerWa[cmid] < resource_version:
+                   registerWa[cmid]=resource_version
                 else:
-                    rmFile(sourceFolder,targetFolder,filename)
-            reloadConfig=True
-            if partfiles:
-                reloadConfig=processFiles(sourceFolder,targetFolder,comment)
-            
-            if url is not None and reloadConfig:
-                       request(url, method, payload)
+                   continue
 
-# $Env:DATA_NAME_ROUTE="alertmanager-route"
-# $Env:DATA_INDENT_ROUTE="2"
-# $Env:DATA_FILE_ROUTE="alertmanager.yaml.part1.01routes"
+                print(f'Working on configmap {metadata.namespace}/{metadata.name}')
+                if label in event['object'].metadata.labels.keys():
+                    print("Configmap with label found")
+                    # delete all old files frim config map
+                    # fixed issue if one file from cm is removed
+                    
+                    purge(sourceFolder,'.*'+cmid)
 
-# $Env:DATA_NAME_RECEIVERS="alertmanager-receivers"
-# $Env:DATA_INDENT_RECEIVERS="0"
-# $Env:DATA_FILE_RECEIVERS="alertmanager.yaml.part6.08receivers"
+                    dataMap=event['object'].data
+                    if dataMap is None:
+                        print("Configmap does not have data.")
+                        # for sure if some one delete data
+                        if partfiles:
+                          processFiles(sourceFolder,targetFolder,comment)
+                        continue
+                    
+                    eventType = event['type']
+                    for filename in dataMap.keys():
+                        print("File in configmap %s %s" % (filename, eventType))
+                        if (eventType == "ADDED") or (eventType == "MODIFIED"):
+                            if partfiles:
+                                writeTextToFile(sourceFolder,filename+"-cmid-"+cmid , dataMap[filename])
+                            else:
+                              writeTextToFile(targetFolder, filename, dataMap[filename])
+ 
+                        else:
+                            rmFile(sourceFolder,targetFolder,filename)
+                    reloadConfig=True
+                    if partfiles:
+                        reloadConfig=processFiles(sourceFolder,targetFolder,comment)
+                    
+                    if url is not None and reloadConfig:
+                            request(url, method, payload)
+        except ReadTimeoutError as e:
+            print("Ignored E rror ReadTimeoutE rror when calling kubernetes: %s\n" % e)
+        except:
+            raise
 
 def getTransform():
   transform = {}
@@ -256,7 +269,6 @@ def copyToDest(src,dest):
 
 def processFiles(sourcepath,destpath,comment):
   tmp=tempfile.gettempdir()
-  #tmppath=tempfile.mkdtemp()
   tmppath=os.path.join(tmp,"k8s_sidecar-cm-to-file")
   if os.path.exists(tmppath):
       shutil.rmtree(tmppath)
@@ -283,8 +295,6 @@ def getFiles(path):
 
 def main():
     print("Starting config map collector")
-    
-
 
     label = os.getenv('LABEL')
     if label is None:
