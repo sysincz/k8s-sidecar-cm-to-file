@@ -81,7 +81,7 @@ def watchForChanges(label, targetFolder, url, method, payload, current):
             else:
                 stream = w.stream(v1.list_namespaced_config_map, namespace=namespace,_request_timeout=timeout,label_selector="%s" % label)
             now=datetime.datetime.now()
-            print(f'{now} Connect to kubernetes api ...')
+            print('{now} Connect to kubernetes api ...')
             for event in stream:
                 
                 metadata = event['object'].metadata
@@ -92,14 +92,14 @@ def watchForChanges(label, targetFolder, url, method, payload, current):
                 cmid="_"+metadata.name+"_"+metadata.namespace
                 resource_version= event['raw_object']['metadata']['resourceVersion']
                 #now=datetime.datetime.now()
-                #print(f'{now} Read configmap {metadata.namespace}/{metadata.name}')
+                #print('{now} Read configmap {metadata.namespace}/{metadata.name}')
 
                 if cmid not in registerWa or registerWa[cmid] < resource_version:
                    registerWa[cmid]=resource_version
                 else:
                    continue
 
-                print(f'Working on configmap {metadata.namespace}/{metadata.name}')
+                print('Working on configmap {metadata.namespace}/{metadata.name}')
                 if label in event['object'].metadata.labels.keys():
                     print("Configmap with label found")
                     # delete all old files frim config map

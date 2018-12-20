@@ -1,9 +1,38 @@
-FROM       python:3.6-slim-stretch
-RUN        pip install kubernetes==8.0.0
+FROM alpine:3.6
+
+ENV KUBE_CLIENT_VERSION="8.0.0" \
+    ALERTMANAGER_VERSION="0.15.3"
+	
+RUN apk add --update --no-cache \
+		dumb-init \
+		bash \
+		python \
+        curl \
+	&& apk add --no-cache --virtual=build-dependencies \
+		python-dev \
+		py-pip \
+        gcc \
+        libc-dev \
+        unixodbc-dev \
+        libffi-dev \
+        openssl-dev \
+	&& pip install --no-cache-dir -U \
+		passlib \
+		kubernetes==${KUBE_CLIENT_VERSION} \
+	&& apk del --purge build-dependencies \
+	&& rm -fr \
+		/var/cache/apk/* \
+		/root/.cache \
+        /tmp/*
+
 RUN        mkdir /app
-RUN        apt-get update && apt-get -y install wget vim
-RUN        wget https://github.com/prometheus/alertmanager/releases/download/v0.15.3/alertmanager-0.15.3.linux-amd64.tar.gz -P /tmp/ && cd /tmp/ && tar xvfz /tmp/alertmanager-0.15.3.linux-amd64.tar.gz &&  mv /tmp/alertmanager-0.15.3.linux-amd64/amtool /app/
-RUN        rm -rf /tmp/* && apt-get clean
+
+RUN        curl -LO https://github.com/prometheus/alertmanager/releases/download/v${ALERTMANAGER_VERSION}/alertmanager-${ALERTMANAGER_VERSION}.linux-amd64.tar.gz \
+           && tar -xvzf alertmanager-${ALERTMANAGER_VERSION}.linux-amd64.tar.gz \
+           && cp alertmanager-${ALERTMANAGER_VERSION}.linux-amd64/amtool /app \
+           && rm -rf alertmanager-${ALERTMANAGER_VERSION}.linux-amd64 \
+           && rm -rf alertmanager-${ALERTMANAGER_VERSION}.linux-amd64.tar.gz
+
 COPY       sidecar/sidecar.py /app/
 COPY       sidecar/files_to_cm.py /app/
 ENV         PYTHONUNBUFFERED=1
