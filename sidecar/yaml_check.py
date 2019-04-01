@@ -15,7 +15,7 @@ def main(str):
 
     with open(str) as stream:
         try:
-            yaml.load(stream)
+            yaml.safe_load(stream)
             return 0
         except yaml.YAMLError as exc:
             print(exc)
