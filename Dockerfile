@@ -35,6 +35,7 @@ RUN        curl -LO https://github.com/prometheus/alertmanager/releases/download
 
 COPY       sidecar/sidecar.py /app/
 COPY       sidecar/files_to_cm.py /app/
+COPY       sidecar/yaml_check.py /app/
 ENV         PYTHONUNBUFFERED=1
 WORKDIR    /app/
 CMD [ "python", "-u", "/app/sidecar.py" ]
